@@ -137,15 +137,18 @@ backend:
   
   - task: "Weather widget API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created GET /api/weather endpoint with mock weather data (ready for OpenWeatherMap integration)"
+      - working: true
+        agent: "testing"
+        comment: "Weather widget API is working correctly. Successfully tested retrieving weather data from the endpoint. The API returns mock data with location, temperature, description, and icon as expected."
   
   - task: "GitHub integration API"
     implemented: true

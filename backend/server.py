@@ -60,6 +60,25 @@ class SkillData(BaseModel):
     category: str
     icon: Optional[str] = None
 
+class EducationData(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    degree: str
+    school: str
+    year: str
+    description: str
+    type: str  # "education" or "certification"
+    icon: Optional[str] = None
+
+class PhotographyData(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: str
+    camera: str
+    settings: str
+    location: str
+    image_url: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class WeatherData(BaseModel):
     location: str
     temperature: str
@@ -207,6 +226,70 @@ async def get_skills():
         logging.error(f"Error retrieving skills: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve skills")
 
+@api_router.post("/education")
+async def create_education(education_data: EducationData):
+    """Create a new education or certification entry"""
+    try:
+        # Read existing education data
+        education = await read_json_file("education")
+        
+        # Add new education entry
+        education.append(education_data.dict())
+        
+        # Save to JSON file
+        await write_json_file("education", education)
+        
+        # Also save to MongoDB for backup
+        await db.education.insert_one(education_data.dict())
+        
+        return {"message": "Education entry created successfully", "id": education_data.id}
+    
+    except Exception as e:
+        logging.error(f"Error creating education entry: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create education entry")
+
+@api_router.get("/education", response_model=List[EducationData])
+async def get_education():
+    """Get all education and certification entries"""
+    try:
+        education = await read_json_file("education")
+        return [EducationData(**edu) for edu in education]
+    except Exception as e:
+        logging.error(f"Error retrieving education data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve education data")
+
+@api_router.post("/photography")
+async def create_photography(photography_data: PhotographyData):
+    """Create a new photography entry"""
+    try:
+        # Read existing photography data
+        photography = await read_json_file("photography")
+        
+        # Add new photography entry
+        photography.append(photography_data.dict())
+        
+        # Save to JSON file
+        await write_json_file("photography", photography)
+        
+        # Also save to MongoDB for backup
+        await db.photography.insert_one(photography_data.dict())
+        
+        return {"message": "Photography entry created successfully", "id": photography_data.id}
+    
+    except Exception as e:
+        logging.error(f"Error creating photography entry: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create photography entry")
+
+@api_router.get("/photography", response_model=List[PhotographyData])
+async def get_photography():
+    """Get all photography entries"""
+    try:
+        photography = await read_json_file("photography")
+        return [PhotographyData(**photo) for photo in photography]
+    except Exception as e:
+        logging.error(f"Error retrieving photography data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve photography data")
+
 @api_router.get("/github/{username}")
 async def get_github_repos(username: str):
     """Get GitHub repositories for a user"""
@@ -240,12 +323,17 @@ async def get_analytics():
         # Read data from JSON files
         contact_messages = await read_json_file("contact_messages")
         projects = await read_json_file("projects")
+        photography = await read_json_file("photography")
+        education = await read_json_file("education")
         
         analytics = {
             "total_contacts": len(contact_messages),
             "total_projects": len(projects),
+            "total_photos": len(photography),
+            "total_education": len(education),
             "last_contact": contact_messages[-1]["timestamp"] if contact_messages else None,
-            "most_recent_project": projects[-1]["created_at"] if projects else None
+            "most_recent_project": projects[-1]["created_at"] if projects else None,
+            "most_recent_photo": photography[-1]["created_at"] if photography else None
         }
         
         return analytics
@@ -286,27 +374,91 @@ async def startup_event():
             {"id": str(uuid.uuid4()), "name": "React", "level": 92, "category": "Frontend", "icon": "⚛️"},
             {"id": str(uuid.uuid4()), "name": "FastAPI", "level": 88, "category": "Backend", "icon": "🚀"},
             {"id": str(uuid.uuid4()), "name": "MongoDB", "level": 85, "category": "Database", "icon": "🍃"},
-            {"id": str(uuid.uuid4()), "name": "Docker", "level": 82, "category": "DevOps", "icon": "🐋"}
+            {"id": str(uuid.uuid4()), "name": "Photography", "level": 88, "category": "Creative", "icon": "📸"}
         ]
         
         # Sample projects data
         projects_data = [
             {
                 "id": str(uuid.uuid4()),
-                "title": "Interactive Portfolio",
-                "description": "A dynamic portfolio website with glittery particle effects",
-                "technologies": ["React", "FastAPI", "MongoDB", "JavaScript"],
-                "github_url": "https://github.com/johndoe/portfolio",
+                "title": "Neural Network Portfolio",
+                "description": "Interactive portfolio with neural network background animations and particle effects",
+                "technologies": ["React", "Canvas", "Neural Networks", "FastAPI"],
+                "github_url": "https://github.com/johndoe/neural-portfolio",
                 "demo_url": "https://johndoe-portfolio.com",
                 "created_at": datetime.utcnow().isoformat()
             },
             {
                 "id": str(uuid.uuid4()),
-                "title": "Weather Dashboard",
-                "description": "Real-time weather monitoring with beautiful visualizations",
-                "technologies": ["Python", "Flask", "Weather API", "Chart.js"],
-                "github_url": "https://github.com/johndoe/weather-dashboard",
-                "demo_url": "https://weather-dashboard.com",
+                "title": "Photography Gallery",
+                "description": "Dynamic photography gallery with advanced slideshow and metadata display",
+                "technologies": ["React", "Node.js", "Express", "MongoDB"],
+                "github_url": "https://github.com/johndoe/photo-gallery",
+                "demo_url": "https://gallery.johndoe.com",
+                "created_at": datetime.utcnow().isoformat()
+            }
+        ]
+        
+        # Sample education data
+        education_data = [
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "Bachelor of Science in Computer Science",
+                "school": "Tech University",
+                "year": "2018 - 2022",
+                "description": "Focused on software engineering, algorithms, and web development",
+                "type": "education",
+                "icon": "🎓"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "Master of Science in Software Engineering",
+                "school": "Advanced Tech Institute",
+                "year": "2022 - 2024",
+                "description": "Specialized in full-stack development and system architecture",
+                "type": "education",
+                "icon": "📚"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "AWS Certified Developer",
+                "school": "Amazon Web Services",
+                "year": "2023",
+                "description": "Cloud development and deployment certification",
+                "type": "certification",
+                "icon": "☁️"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "Professional Photography Certificate",
+                "school": "Photography Academy",
+                "year": "2021",
+                "description": "Advanced photography techniques and portfolio development",
+                "type": "certification",
+                "icon": "📸"
+            }
+        ]
+        
+        # Sample photography data
+        photography_data = [
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Coastal Majesty",
+                "description": "Dramatic cliff formations meet the endless ocean in this breathtaking coastal landscape. Shot during golden hour to capture the warm light dancing on the rock formations.",
+                "camera": "Canon EOS R5",
+                "settings": "f/11, 1/60s, ISO 100",
+                "location": "Big Sur, California",
+                "image_url": "https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg",
+                "created_at": datetime.utcnow().isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Mountain Reflection",
+                "description": "Perfect symmetry captured in this serene mountain lake reflection. The stillness of the water creates a mirror-like surface that doubles the beauty of the landscape.",
+                "camera": "Sony A7R IV",
+                "settings": "f/8, 1/125s, ISO 200",
+                "location": "Lake Louise, Canada",
+                "image_url": "https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg",
                 "created_at": datetime.utcnow().isoformat()
             }
         ]
@@ -319,6 +471,14 @@ async def startup_event():
         existing_projects = await read_json_file("projects")
         if not existing_projects:
             await write_json_file("projects", projects_data)
+        
+        existing_education = await read_json_file("education")
+        if not existing_education:
+            await write_json_file("education", education_data)
+        
+        existing_photography = await read_json_file("photography")
+        if not existing_photography:
+            await write_json_file("photography", photography_data)
         
         logger.info("Sample data initialized successfully")
         

@@ -5,6 +5,153 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Neural Network Background Component
+const NeuralNetworkBackground = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef(null);
+  const nodesRef = useRef([]);
+  const connectionsRef = useRef([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Neural network node class
+    class Node {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.energy = Math.random();
+        this.pulse = Math.random() * Math.PI * 2;
+        this.connections = [];
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.pulse += 0.02;
+        this.energy = Math.abs(Math.sin(this.pulse));
+
+        // Bounce off edges
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+        // Keep in bounds
+        this.x = Math.max(0, Math.min(canvas.width, this.x));
+        this.y = Math.max(0, Math.min(canvas.height, this.y));
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.energy * 0.8 + 0.2;
+        
+        // Create glowing node
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 8);
+        gradient.addColorStop(0, `rgba(100, 200, 255, ${this.energy})`);
+        gradient.addColorStop(0.5, `rgba(50, 150, 255, ${this.energy * 0.5})`);
+        gradient.addColorStop(1, 'rgba(0, 100, 255, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+      }
+    }
+
+    // Initialize nodes
+    const nodeCount = 50;
+    nodesRef.current = [];
+    for (let i = 0; i < nodeCount; i++) {
+      nodesRef.current.push(new Node(
+        Math.random() * canvas.width,
+        Math.random() * canvas.height
+      ));
+    }
+
+    // Animation loop
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Update and draw nodes
+      nodesRef.current.forEach(node => {
+        node.update();
+        node.draw(ctx);
+      });
+
+      // Draw connections with electric current effect
+      ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
+      ctx.lineWidth = 1;
+      
+      for (let i = 0; i < nodesRef.current.length; i++) {
+        for (let j = i + 1; j < nodesRef.current.length; j++) {
+          const nodeA = nodesRef.current[i];
+          const nodeB = nodesRef.current[j];
+          const distance = Math.sqrt(
+            Math.pow(nodeA.x - nodeB.x, 2) + Math.pow(nodeA.y - nodeB.y, 2)
+          );
+
+          if (distance < 150) {
+            const opacity = (150 - distance) / 150;
+            const energy = (nodeA.energy + nodeB.energy) / 2;
+            
+            ctx.save();
+            ctx.globalAlpha = opacity * energy * 0.5;
+            ctx.strokeStyle = `rgba(100, 200, 255, ${opacity * energy})`;
+            ctx.lineWidth = energy * 2;
+            
+            // Electric current effect
+            ctx.beginPath();
+            ctx.moveTo(nodeA.x, nodeA.y);
+            
+            // Add some randomness for electric effect
+            const midX = (nodeA.x + nodeB.x) / 2 + (Math.random() - 0.5) * 10;
+            const midY = (nodeA.y + nodeB.y) / 2 + (Math.random() - 0.5) * 10;
+            
+            ctx.quadraticCurveTo(midX, midY, nodeB.x, nodeB.y);
+            ctx.stroke();
+            
+            ctx.restore();
+          }
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-0"
+      style={{ 
+        background: 'radial-gradient(ellipse at center, #001122 0%, #000000 70%)',
+        opacity: 0.4
+      }}
+    />
+  );
+};
+
 // Particle System Component
 const ParticleSystem = () => {
   const canvasRef = useRef(null);
@@ -16,7 +163,6 @@ const ParticleSystem = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Set canvas size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -25,7 +171,6 @@ const ParticleSystem = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Particle class
     class Particle {
       constructor(x, y) {
         this.x = x;
@@ -50,7 +195,6 @@ const ParticleSystem = () => {
         ctx.save();
         ctx.globalAlpha = this.life;
         
-        // Create gradient for glittery effect
         const gradient = ctx.createRadialGradient(
           this.x, this.y, 0,
           this.x, this.y, this.size * 4
@@ -66,7 +210,6 @@ const ParticleSystem = () => {
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
         
-        // Add sparkle effect
         ctx.strokeStyle = `rgba(255, 255, 255, ${brightness})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -80,11 +223,9 @@ const ParticleSystem = () => {
       }
     }
 
-    // Mouse move handler
     const handleMouseMove = (e) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
       
-      // Create new particles at mouse position
       for (let i = 0; i < 3; i++) {
         particlesRef.current.push(
           new Particle(
@@ -95,11 +236,9 @@ const ParticleSystem = () => {
       }
     };
 
-    // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Update and draw particles
       particlesRef.current = particlesRef.current.filter(particle => {
         particle.update();
         particle.draw(ctx);
@@ -150,9 +289,8 @@ const Navigation = () => {
             Portfolio
           </div>
           
-          {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
-            {['home', 'about', 'skills', 'projects', 'contact'].map((item) => (
+            {['home', 'about', 'skills', 'education', 'photography', 'projects', 'contact'].map((item) => (
               <button
                 key={item}
                 onClick={() => scrollToSection(item)}
@@ -164,7 +302,6 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden text-gray-300 hover:text-white transition-colors duration-300"
@@ -175,10 +312,9 @@ const Navigation = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-800/30">
-            {['home', 'about', 'skills', 'projects', 'contact'].map((item) => (
+            {['home', 'about', 'skills', 'education', 'photography', 'projects', 'contact'].map((item) => (
               <button
                 key={item}
                 onClick={() => scrollToSection(item)}
@@ -198,40 +334,29 @@ const Navigation = () => {
 const HeroSection = () => {
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1577369351003-e27ab808d2c6")',
-          filter: 'brightness(0.3) contrast(1.2)'
-        }}
-      />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-gray-900/40 to-black/60" />
       
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-gray-900/60 to-black/70" />
-      
-      {/* Content */}
       <div className="relative z-20 text-center px-6">
-        <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-gray-100 via-gray-300 to-gray-500 bg-clip-text text-transparent animate-pulse">
+        <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-200 via-white to-blue-300 bg-clip-text text-transparent animate-pulse">
           John Doe
         </h1>
         <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
           Full-Stack Developer & Creative Technologist
         </p>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
-          Crafting digital experiences with interactive lighting effects and cutting-edge web technologies
+          Crafting digital experiences with interactive effects and cutting-edge technologies
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button 
             onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-lg font-semibold hover:from-gray-500 hover:to-gray-700 transition-all duration-300 transform hover:scale-105"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
           >
             View My Work
           </button>
           <button 
             onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-3 border-2 border-gray-600 text-gray-300 rounded-lg font-semibold hover:bg-gray-600 hover:text-white transition-all duration-300"
+            className="px-8 py-3 border-2 border-blue-600 text-blue-300 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300"
           >
             Get In Touch
           </button>
@@ -244,16 +369,16 @@ const HeroSection = () => {
 // About Section
 const AboutSection = () => {
   return (
-    <section id="about" className="py-20 px-6">
+    <section id="about" className="py-20 px-6 relative">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
           About Me
         </h2>
         
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h3 className="text-2xl font-semibold text-gray-200 mb-6">
-              Passionate Developer with a Creative Edge
+              Passionate Developer & Creative Photographer
             </h3>
             <p className="text-gray-400 mb-6 leading-relaxed">
               I'm a full-stack developer who believes in creating not just functional applications, 
@@ -261,16 +386,16 @@ const AboutSection = () => {
               and a keen eye for interactive design, I bring ideas to life through code.
             </p>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              My journey in tech started with a fascination for how things work, and has evolved into 
-              a passion for creating immersive web experiences that push the boundaries of what's possible 
-              in the browser.
+              Beyond coding, I'm passionate about photography, capturing moments that tell stories 
+              and exploring the intersection of technology and art. This creative perspective enhances 
+              my approach to software development and user experience design.
             </p>
             
             <div className="flex flex-wrap gap-3">
-              {['JavaScript', 'React', 'Python', 'FastAPI', 'Node.js', 'MongoDB'].map((tech) => (
+              {['JavaScript', 'React', 'Python', 'FastAPI', 'Photography', 'UI/UX'].map((tech) => (
                 <span 
                   key={tech}
-                  className="px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-700 text-gray-300 rounded-full text-sm font-medium hover:from-gray-700 hover:to-gray-600 transition-all duration-300"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-800 to-blue-700 text-blue-200 rounded-full text-sm font-medium hover:from-blue-700 hover:to-blue-600 transition-all duration-300"
                 >
                   {tech}
                 </span>
@@ -279,10 +404,10 @@ const AboutSection = () => {
           </div>
           
           <div className="relative">
-            <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-gray-600/20 to-transparent animate-pulse"></div>
+            <div className="w-full h-96 bg-gradient-to-br from-blue-900/50 to-gray-900/50 rounded-lg overflow-hidden relative border border-blue-800/30">
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-600/20 to-transparent animate-pulse"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-6xl text-gray-600">👨‍💻</div>
+                <div className="text-6xl text-blue-400">👨‍💻</div>
               </div>
             </div>
           </div>
@@ -299,14 +424,14 @@ const SkillsSection = () => {
     { name: 'Backend Development', level: 90, icon: '⚙️' },
     { name: 'Database Design', level: 85, icon: '💾' },
     { name: 'API Integration', level: 92, icon: '🔗' },
-    { name: 'UI/UX Design', level: 88, icon: '✨' },
-    { name: 'DevOps', level: 80, icon: '🚀' },
+    { name: 'Photography', level: 88, icon: '📸' },
+    { name: 'UI/UX Design', level: 85, icon: '✨' },
   ];
 
   return (
-    <section id="skills" className="py-20 px-6 bg-gradient-to-b from-gray-900/50 to-transparent">
+    <section id="skills" className="py-20 px-6 bg-gradient-to-b from-blue-900/20 to-transparent">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
           Skills & Expertise
         </h2>
         
@@ -320,12 +445,270 @@ const SkillsSection = () => {
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2">
                 <div 
-                  className="bg-gradient-to-r from-gray-400 to-gray-600 h-2 rounded-full transition-all duration-1000 group-hover:from-gray-300 group-hover:to-gray-500"
+                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-1000 group-hover:from-blue-300 group-hover:to-blue-500"
                   style={{ width: `${skill.level}%` }}
                 ></div>
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Education Section
+const EducationSection = () => {
+  const education = [
+    {
+      degree: "Bachelor of Science in Computer Science",
+      school: "Tech University",
+      year: "2018 - 2022",
+      description: "Focused on software engineering, algorithms, and web development",
+      icon: "🎓"
+    },
+    {
+      degree: "Master of Science in Software Engineering",
+      school: "Advanced Tech Institute",
+      year: "2022 - 2024",
+      description: "Specialized in full-stack development and system architecture",
+      icon: "📚"
+    }
+  ];
+
+  const certificates = [
+    {
+      name: "AWS Certified Developer",
+      issuer: "Amazon Web Services",
+      year: "2023",
+      icon: "☁️"
+    },
+    {
+      name: "React Advanced Certification",
+      issuer: "Meta",
+      year: "2023",
+      icon: "⚛️"
+    },
+    {
+      name: "Python Expert Certification",
+      issuer: "Python Institute",
+      year: "2022",
+      icon: "🐍"
+    },
+    {
+      name: "Professional Photography Certificate",
+      issuer: "Photography Academy",
+      year: "2021",
+      icon: "📸"
+    }
+  ];
+
+  return (
+    <section id="education" className="py-20 px-6 relative">
+      <div className="container mx-auto max-w-6xl">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
+          Education & Certifications
+        </h2>
+        
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Education */}
+          <div>
+            <h3 className="text-2xl font-semibold text-gray-200 mb-8 flex items-center">
+              <span className="text-3xl mr-3">🎓</span>
+              Education
+            </h3>
+            
+            <div className="space-y-6">
+              {education.map((edu, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+                  <div className="flex items-start">
+                    <span className="text-3xl mr-4">{edu.icon}</span>
+                    <div className="flex-1">
+                      <h4 className="text-xl font-semibold text-gray-200 mb-2">{edu.degree}</h4>
+                      <p className="text-blue-300 font-medium mb-2">{edu.school}</p>
+                      <p className="text-gray-400 text-sm mb-3">{edu.year}</p>
+                      <p className="text-gray-400 text-sm">{edu.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Certifications */}
+          <div>
+            <h3 className="text-2xl font-semibold text-gray-200 mb-8 flex items-center">
+              <span className="text-3xl mr-3">🏆</span>
+              Certifications
+            </h3>
+            
+            <div className="space-y-4">
+              {certificates.map((cert, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-4 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-4">{cert.icon}</span>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-gray-200">{cert.name}</h4>
+                      <p className="text-blue-300 text-sm">{cert.issuer}</p>
+                    </div>
+                    <span className="text-gray-400 text-sm">{cert.year}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Photography Section
+const PhotographySection = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const photographs = [
+    {
+      id: 1,
+      url: "https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg",
+      title: "Coastal Majesty",
+      description: "Dramatic cliff formations meet the endless ocean in this breathtaking coastal landscape. Shot during golden hour to capture the warm light dancing on the rock formations.",
+      camera: "Canon EOS R5",
+      settings: "f/11, 1/60s, ISO 100",
+      location: "Big Sur, California"
+    },
+    {
+      id: 2,
+      url: "https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg",
+      title: "Mountain Reflection",
+      description: "Perfect symmetry captured in this serene mountain lake reflection. The stillness of the water creates a mirror-like surface that doubles the beauty of the landscape.",
+      camera: "Sony A7R IV",
+      settings: "f/8, 1/125s, ISO 200",
+      location: "Lake Louise, Canada"
+    },
+    {
+      id: 3,
+      url: "https://images.unsplash.com/photo-1534218238612-bace67b05bf2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBwaG90b2dyYXBoeXxlbnwwfHx8fDE3NTE1NjI0MDN8MA&ixlib=rb-4.1.0&q=85",
+      title: "Aerial Perspective",
+      description: "A winding river cuts through the mountainous landscape, creating natural patterns that can only be fully appreciated from above. This aerial shot showcases the intricate relationship between water and land.",
+      camera: "DJI Mavic 3",
+      settings: "f/5.6, 1/200s, ISO 100",
+      location: "Norwegian Fjords"
+    },
+    {
+      id: 4,
+      url: "https://images.unsplash.com/photo-1515961896317-adf9e14bdcc0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBwaG90b2dyYXBoeXxlbnwwfHx8fDE3NTE1NjI0MDN8MA&ixlib=rb-4.1.0&q=85",
+      title: "Alpine Serenity",
+      description: "The turquoise waters of this alpine lake create a striking contrast against the snow-capped peaks. The unique color comes from glacial sediment suspended in the water.",
+      camera: "Nikon Z9",
+      settings: "f/9, 1/90s, ISO 64",
+      location: "Swiss Alps"
+    },
+    {
+      id: 5,
+      url: "https://images.pexels.com/photos/4549411/pexels-photo-4549411.jpeg",
+      title: "Behind the Lens",
+      description: "A glimpse into the photographer's world - equipment, planning, and the tools that help capture these moments. This workspace represents the technical side of creative photography.",
+      camera: "iPhone 14 Pro",
+      settings: "Portrait mode, f/1.8",
+      location: "Home Studio"
+    }
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % photographs.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + photographs.length) % photographs.length);
+  };
+
+  const currentPhoto = photographs[currentSlide];
+
+  return (
+    <section id="photography" className="py-20 px-6 bg-gradient-to-b from-blue-900/20 to-transparent">
+      <div className="container mx-auto max-w-6xl">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
+          Photography Portfolio
+        </h2>
+        
+        <div className="relative max-w-4xl mx-auto">
+          {/* Main Image */}
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-900/50 to-gray-900/50 border border-blue-800/30">
+            <img 
+              src={currentPhoto.url} 
+              alt={currentPhoto.title}
+              className="w-full h-full object-cover transition-opacity duration-500"
+            />
+            
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Photo Details */}
+          <div className="mt-8 bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-200 mb-3">{currentPhoto.title}</h3>
+                <p className="text-gray-400 mb-4 leading-relaxed">{currentPhoto.description}</p>
+                <div className="flex items-center text-blue-300 text-sm">
+                  <span className="mr-2">📍</span>
+                  <span>{currentPhoto.location}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <span className="text-blue-300 font-medium w-20">Camera:</span>
+                  <span className="text-gray-400">{currentPhoto.camera}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-blue-300 font-medium w-20">Settings:</span>
+                  <span className="text-gray-400">{currentPhoto.settings}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-blue-300 font-medium w-20">Location:</span>
+                  <span className="text-gray-400">{currentPhoto.location}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Slide Indicators */}
+          <div className="flex justify-center mt-6 space-x-2">
+            {photographs.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide 
+                    ? 'bg-blue-500 scale-125' 
+                    : 'bg-gray-600 hover:bg-gray-500'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Slide Counter */}
+          <div className="text-center mt-4 text-gray-400 text-sm">
+            {currentSlide + 1} / {photographs.length}
+          </div>
         </div>
       </div>
     </section>
@@ -344,17 +727,17 @@ const ProjectsSection = () => {
       github: '#'
     },
     {
-      title: 'Weather Analytics App',
-      description: 'Beautiful weather application with advanced analytics and forecasting',
-      tech: ['JavaScript', 'Weather API', 'Chart.js'],
-      image: 'https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=400&h=300&fit=crop',
+      title: 'Neural Network Portfolio',
+      description: 'This very portfolio showcasing advanced animations and interactive effects',
+      tech: ['React', 'Canvas', 'Neural Networks', 'Particle Systems'],
+      image: 'https://images.unsplash.com/photo-1518186233392-c232efbf2373?w=400&h=300&fit=crop',
       demo: '#',
       github: '#'
     },
     {
-      title: 'Portfolio Generator',
-      description: 'Automated portfolio website generator with PDF export functionality',
-      tech: ['Python', 'Flask', 'ReportLab', 'HTML/CSS'],
+      title: 'Photography Gallery App',
+      description: 'Dynamic photo gallery with advanced slideshow and metadata display',
+      tech: ['React', 'Node.js', 'Express', 'MongoDB'],
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
       demo: '#',
       github: '#'
@@ -364,13 +747,13 @@ const ProjectsSection = () => {
   return (
     <section id="projects" className="py-20 px-6">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
           Featured Projects
         </h2>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
-            <div key={index} className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 transform hover:scale-105">
+            <div key={index} className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-900/30 to-gray-900/30 hover:from-blue-800/40 hover:to-gray-800/40 transition-all duration-300 transform hover:scale-105 border border-blue-800/30 hover:border-blue-600/50">
               <div className="aspect-video overflow-hidden">
                 <img 
                   src={project.image} 
@@ -387,7 +770,7 @@ const ProjectsSection = () => {
                   {project.tech.map((tech, techIndex) => (
                     <span 
                       key={techIndex}
-                      className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs"
+                      className="px-2 py-1 bg-blue-900/50 text-blue-300 rounded text-xs border border-blue-800/30"
                     >
                       {tech}
                     </span>
@@ -397,13 +780,13 @@ const ProjectsSection = () => {
                 <div className="flex gap-3">
                   <a 
                     href={project.demo}
-                    className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded text-sm hover:from-gray-500 hover:to-gray-600 transition-all duration-300"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded text-sm hover:from-blue-500 hover:to-blue-600 transition-all duration-300"
                   >
                     Live Demo
                   </a>
                   <a 
                     href={project.github}
-                    className="px-4 py-2 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-600 hover:text-white transition-all duration-300"
+                    className="px-4 py-2 border border-blue-600 text-blue-300 rounded text-sm hover:bg-blue-600 hover:text-white transition-all duration-300"
                   >
                     GitHub
                   </a>
@@ -450,9 +833,9 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="py-20 px-6 bg-gradient-to-b from-gray-900/50 to-black/50">
+    <section id="contact" className="py-20 px-6 bg-gradient-to-b from-blue-900/20 to-black/50">
       <div className="container mx-auto max-w-4xl">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
           Get In Touch
         </h2>
         
@@ -489,7 +872,7 @@ const ContactSection = () => {
                 onChange={handleChange}
                 placeholder="Your Name"
                 required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600"
+                className="w-full px-4 py-3 bg-blue-900/20 border border-blue-800/30 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             
@@ -501,7 +884,7 @@ const ContactSection = () => {
                 onChange={handleChange}
                 placeholder="Your Email"
                 required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600"
+                className="w-full px-4 py-3 bg-blue-900/20 border border-blue-800/30 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             
@@ -513,14 +896,14 @@ const ContactSection = () => {
                 placeholder="Your Message"
                 rows="6"
                 required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600 resize-none"
+                className="w-full px-4 py-3 bg-blue-900/20 border border-blue-800/30 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 resize-none"
               ></textarea>
             </div>
             
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-lg font-semibold hover:from-gray-500 hover:to-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Sending...' : 'Send Message'}
             </button>
@@ -553,7 +936,7 @@ const WeatherWidget = () => {
 
   if (loading) {
     return (
-      <div className="fixed bottom-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 text-gray-300 animate-pulse">
+      <div className="fixed bottom-4 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-gray-300 animate-pulse border border-blue-800/30">
         Loading weather...
       </div>
     );
@@ -562,7 +945,7 @@ const WeatherWidget = () => {
   if (!weather) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 text-gray-300 border border-gray-700/50">
+    <div className="fixed bottom-4 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-gray-300 border border-blue-800/30">
       <div className="flex items-center space-x-3">
         <span className="text-2xl">{weather.icon || '🌤️'}</span>
         <div>
@@ -577,12 +960,15 @@ const WeatherWidget = () => {
 // Main App Component
 function App() {
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      <NeuralNetworkBackground />
       <ParticleSystem />
       <Navigation />
       <HeroSection />
       <AboutSection />
       <SkillsSection />
+      <EducationSection />
+      <PhotographySection />
       <ProjectsSection />
       <ContactSection />
       <WeatherWidget />

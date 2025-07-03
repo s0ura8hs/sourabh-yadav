@@ -107,15 +107,18 @@ user_problem_statement: "Create a dynamic personal portfolio website with intera
 backend:
   - task: "JSON-based data storage system"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented JSON file-based storage for contact messages, projects, and skills with async file operations and sample data initialization"
+      - working: true
+        agent: "testing"
+        comment: "JSON file-based storage system is working correctly. Successfully tested creating and retrieving data for contact messages, projects, and skills. Data is properly persisted in JSON files."
   
   - task: "Contact form API endpoint"
     implemented: true

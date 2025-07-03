@@ -10,7 +10,6 @@ const NeuralNetworkBackground = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
   const nodesRef = useRef([]);
-  const connectionsRef = useRef([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -24,7 +23,6 @@ const NeuralNetworkBackground = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Neural network node class
     class Node {
       constructor(x, y) {
         this.x = x;
@@ -33,7 +31,6 @@ const NeuralNetworkBackground = () => {
         this.vy = (Math.random() - 0.5) * 0.5;
         this.energy = Math.random();
         this.pulse = Math.random() * Math.PI * 2;
-        this.connections = [];
       }
 
       update() {
@@ -42,11 +39,9 @@ const NeuralNetworkBackground = () => {
         this.pulse += 0.02;
         this.energy = Math.abs(Math.sin(this.pulse));
 
-        // Bounce off edges
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
 
-        // Keep in bounds
         this.x = Math.max(0, Math.min(canvas.width, this.x));
         this.y = Math.max(0, Math.min(canvas.height, this.y));
       }
@@ -55,7 +50,6 @@ const NeuralNetworkBackground = () => {
         ctx.save();
         ctx.globalAlpha = this.energy * 0.8 + 0.2;
         
-        // Create glowing node
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 8);
         gradient.addColorStop(0, `rgba(100, 200, 255, ${this.energy})`);
         gradient.addColorStop(0.5, `rgba(50, 150, 255, ${this.energy * 0.5})`);
@@ -70,7 +64,6 @@ const NeuralNetworkBackground = () => {
       }
     }
 
-    // Initialize nodes
     const nodeCount = 50;
     nodesRef.current = [];
     for (let i = 0; i < nodeCount; i++) {
@@ -80,17 +73,14 @@ const NeuralNetworkBackground = () => {
       ));
     }
 
-    // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Update and draw nodes
       nodesRef.current.forEach(node => {
         node.update();
         node.draw(ctx);
       });
 
-      // Draw connections with electric current effect
       ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
       ctx.lineWidth = 1;
       
@@ -111,11 +101,9 @@ const NeuralNetworkBackground = () => {
             ctx.strokeStyle = `rgba(100, 200, 255, ${opacity * energy})`;
             ctx.lineWidth = energy * 2;
             
-            // Electric current effect
             ctx.beginPath();
             ctx.moveTo(nodeA.x, nodeA.y);
             
-            // Add some randomness for electric effect
             const midX = (nodeA.x + nodeB.x) / 2 + (Math.random() - 0.5) * 10;
             const midY = (nodeA.y + nodeB.y) / 2 + (Math.random() - 0.5) * 10;
             
@@ -156,7 +144,6 @@ const NeuralNetworkBackground = () => {
 const ParticleSystem = () => {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
-  const mouseRef = useRef({ x: 0, y: 0 });
   const animationRef = useRef(null);
 
   useEffect(() => {
@@ -224,8 +211,6 @@ const ParticleSystem = () => {
     }
 
     const handleMouseMove = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-      
       for (let i = 0; i < 3; i++) {
         particlesRef.current.push(
           new Particle(
@@ -281,15 +266,36 @@ const Navigation = () => {
     setIsMenuOpen(false);
   };
 
+  const downloadResume = async () => {
+    try {
+      const response = await axios.get(`${API}/resume/generate`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Sourabh_Khairwal_Resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading resume:', error);
+      alert('Error downloading resume. Please try again.');
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md border-b border-gray-800/30">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text text-transparent">
-            Portfolio
+          <div className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">
+            Sourabh Portfolio
           </div>
           
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex space-x-8 items-center">
             {['home', 'about', 'skills', 'education', 'photography', 'projects', 'contact'].map((item) => (
               <button
                 key={item}
@@ -297,9 +303,16 @@ const Navigation = () => {
                 className="text-gray-300 hover:text-white transition-colors duration-300 capitalize relative group"
               >
                 {item}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-gray-300 to-gray-500 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-300 to-blue-500 transition-all duration-300 group-hover:w-full"></span>
               </button>
             ))}
+            
+            <button
+              onClick={downloadResume}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105"
+            >
+              📄 Download Resume
+            </button>
           </div>
 
           <button
@@ -323,6 +336,12 @@ const Navigation = () => {
                 {item}
               </button>
             ))}
+            <button
+              onClick={downloadResume}
+              className="block w-full text-left px-4 py-2 text-blue-300 hover:text-white transition-colors duration-300"
+            >
+              📄 Download Resume
+            </button>
           </div>
         )}
       </div>
@@ -338,7 +357,7 @@ const HeroSection = () => {
       
       <div className="relative z-20 text-center px-6">
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-200 via-white to-blue-300 bg-clip-text text-transparent animate-pulse">
-          John Doe
+          Sourabh Khairwal
         </h1>
         <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
           Full-Stack Developer & Creative Technologist
@@ -457,51 +476,25 @@ const SkillsSection = () => {
   );
 };
 
-// Education Section
+// Education Section with Certificate Links
 const EducationSection = () => {
-  const education = [
-    {
-      degree: "Bachelor of Science in Computer Science",
-      school: "Tech University",
-      year: "2018 - 2022",
-      description: "Focused on software engineering, algorithms, and web development",
-      icon: "🎓"
-    },
-    {
-      degree: "Master of Science in Software Engineering",
-      school: "Advanced Tech Institute",
-      year: "2022 - 2024",
-      description: "Specialized in full-stack development and system architecture",
-      icon: "📚"
-    }
-  ];
+  const [educationData, setEducationData] = useState([]);
 
-  const certificates = [
-    {
-      name: "AWS Certified Developer",
-      issuer: "Amazon Web Services",
-      year: "2023",
-      icon: "☁️"
-    },
-    {
-      name: "React Advanced Certification",
-      issuer: "Meta",
-      year: "2023",
-      icon: "⚛️"
-    },
-    {
-      name: "Python Expert Certification",
-      issuer: "Python Institute",
-      year: "2022",
-      icon: "🐍"
-    },
-    {
-      name: "Professional Photography Certificate",
-      issuer: "Photography Academy",
-      year: "2021",
-      icon: "📸"
-    }
-  ];
+  useEffect(() => {
+    const fetchEducation = async () => {
+      try {
+        const response = await axios.get(`${API}/education`);
+        setEducationData(response.data);
+      } catch (error) {
+        console.error('Error fetching education data:', error);
+      }
+    };
+
+    fetchEducation();
+  }, []);
+
+  const education = educationData.filter(item => item.type === 'education');
+  const certificates = educationData.filter(item => item.type === 'certification');
 
   return (
     <section id="education" className="py-20 px-6 relative">
@@ -519,8 +512,8 @@ const EducationSection = () => {
             </h3>
             
             <div className="space-y-6">
-              {education.map((edu, index) => (
-                <div key={index} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+              {education.map((edu) => (
+                <div key={edu.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
                   <div className="flex items-start">
                     <span className="text-3xl mr-4">{edu.icon}</span>
                     <div className="flex-1">
@@ -543,15 +536,28 @@ const EducationSection = () => {
             </h3>
             
             <div className="space-y-4">
-              {certificates.map((cert, index) => (
-                <div key={index} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-4 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-4">{cert.icon}</span>
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-200">{cert.name}</h4>
-                      <p className="text-blue-300 text-sm">{cert.issuer}</p>
+              {certificates.map((cert) => (
+                <div key={cert.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-4 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-1">
+                      <span className="text-2xl mr-4">{cert.icon}</span>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-gray-200">{cert.degree}</h4>
+                        <p className="text-blue-300 text-sm">{cert.school}</p>
+                      </div>
+                      <span className="text-gray-400 text-sm mr-4">{cert.year}</span>
                     </div>
-                    <span className="text-gray-400 text-sm">{cert.year}</span>
+                    
+                    {cert.certificate_url && (
+                      <a 
+                        href={cert.certificate_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full transition-colors duration-300 flex items-center"
+                      >
+                        🔗 View Certificate
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -633,7 +639,6 @@ const PhotographySection = () => {
         </h2>
         
         <div className="relative max-w-4xl mx-auto">
-          {/* Main Image */}
           <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-900/50 to-gray-900/50 border border-blue-800/30">
             <img 
               src={currentPhoto.url} 
@@ -641,7 +646,6 @@ const PhotographySection = () => {
               className="w-full h-full object-cover transition-opacity duration-500"
             />
             
-            {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
@@ -661,7 +665,6 @@ const PhotographySection = () => {
             </button>
           </div>
 
-          {/* Photo Details */}
           <div className="mt-8 bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -690,7 +693,6 @@ const PhotographySection = () => {
             </div>
           </div>
 
-          {/* Slide Indicators */}
           <div className="flex justify-center mt-6 space-x-2">
             {photographs.map((_, index) => (
               <button
@@ -705,7 +707,6 @@ const PhotographySection = () => {
             ))}
           </div>
           
-          {/* Slide Counter */}
           <div className="text-center mt-4 text-gray-400 text-sm">
             {currentSlide + 1} / {photographs.length}
           </div>
@@ -719,18 +720,18 @@ const PhotographySection = () => {
 const ProjectsSection = () => {
   const projects = [
     {
-      title: 'Interactive Data Visualization',
-      description: 'Real-time data visualization dashboard with interactive charts and animations',
-      tech: ['React', 'D3.js', 'Python', 'FastAPI'],
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
-      demo: '#',
-      github: '#'
-    },
-    {
       title: 'Neural Network Portfolio',
       description: 'This very portfolio showcasing advanced animations and interactive effects',
       tech: ['React', 'Canvas', 'Neural Networks', 'Particle Systems'],
       image: 'https://images.unsplash.com/photo-1518186233392-c232efbf2373?w=400&h=300&fit=crop',
+      demo: '#',
+      github: '#'
+    },
+    {
+      title: 'Interactive Data Visualization',
+      description: 'Real-time data visualization dashboard with interactive charts and animations',
+      tech: ['React', 'D3.js', 'Python', 'FastAPI'],
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
       demo: '#',
       github: '#'
     },
@@ -800,7 +801,7 @@ const ProjectsSection = () => {
   );
 };
 
-// Contact Section
+// Contact Section with Email Integration
 const ContactSection = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -808,18 +809,26 @@ const ContactSection = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('');
     
     try {
-      await axios.post(`${API}/contact`, formData);
-      alert('Message sent successfully!');
+      const response = await axios.post(`${API}/contact`, formData);
+      
+      if (response.data.email_sent) {
+        setSubmitStatus('✅ Message sent successfully! You will receive a confirmation email.');
+      } else {
+        setSubmitStatus('✅ Message sent successfully! (Note: Email notification not configured)');
+      }
+      
       setFormData({ name: '', email: '', message: '' });
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Error sending message. Please try again.');
+      setSubmitStatus('❌ Error sending message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -850,15 +859,15 @@ const ContactSection = () => {
             <div className="space-y-4">
               <div className="flex items-center">
                 <span className="text-2xl mr-4">📧</span>
-                <span className="text-gray-300">john.doe@example.com</span>
+                <span className="text-gray-300">sourabhkhairwal@gmail.com</span>
               </div>
               <div className="flex items-center">
                 <span className="text-2xl mr-4">🌐</span>
-                <span className="text-gray-300">github.com/johndoe</span>
+                <span className="text-gray-300">github.com/sourabhkhairwal</span>
               </div>
               <div className="flex items-center">
                 <span className="text-2xl mr-4">💼</span>
-                <span className="text-gray-300">linkedin.com/in/johndoe</span>
+                <span className="text-gray-300">linkedin.com/in/sourabhkhairwal</span>
               </div>
             </div>
           </div>
@@ -903,10 +912,16 @@ const ContactSection = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg font-semibold hover:from-blue-500 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? 'Sending...' : 'Send Message'}
             </button>
+            
+            {submitStatus && (
+              <div className="text-center mt-4 p-3 rounded-lg bg-blue-900/20 border border-blue-800/30">
+                <p className="text-sm">{submitStatus}</p>
+              </div>
+            )}
           </form>
         </div>
       </div>

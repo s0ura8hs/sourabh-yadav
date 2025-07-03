@@ -1,17 +1,26 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 import uuid
 from datetime import datetime
 import json
 import aiofiles
 import httpx
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import io
+import base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -31,6 +40,24 @@ api_router = APIRouter(prefix="/api")
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
+# Email Configuration
+try:
+    conf = ConnectionConfig(
+        MAIL_USERNAME=os.getenv("GMAIL_USER", "sourabhkhairwal@gmail.com"),
+        MAIL_PASSWORD=os.getenv("GMAIL_PASSWORD", ""),  # Will be set via environment
+        MAIL_FROM=os.getenv("GMAIL_USER", "sourabhkhairwal@gmail.com"),
+        MAIL_PORT=587,
+        MAIL_SERVER="smtp.gmail.com",
+        MAIL_STARTTLS=True,
+        MAIL_SSL_TLS=False,
+        USE_CREDENTIALS=True,
+        VALIDATE_CERTS=True
+    )
+    email_enabled = bool(os.getenv("GMAIL_PASSWORD"))
+except Exception as e:
+    logging.warning(f"Email configuration failed: {e}")
+    email_enabled = False
+
 # Models
 class ContactMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -41,7 +68,7 @@ class ContactMessage(BaseModel):
 
 class ContactMessageCreate(BaseModel):
     name: str
-    email: str
+    email: EmailStr
     message: str
 
 class ProjectData(BaseModel):
@@ -68,6 +95,7 @@ class EducationData(BaseModel):
     description: str
     type: str  # "education" or "certification"
     icon: Optional[str] = None
+    certificate_url: Optional[str] = None  # New field for certificate links
 
 class PhotographyData(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -84,6 +112,13 @@ class WeatherData(BaseModel):
     temperature: str
     description: str
     icon: str
+
+class ResumeData(BaseModel):
+    personal_info: dict
+    experience: List[dict]
+    education: List[dict]
+    skills: List[dict]
+    projects: List[dict]
 
 # JSON file operations
 async def read_json_file(filename: str) -> list:
@@ -104,6 +139,120 @@ async def write_json_file(filename: str, data: list):
     async with aiofiles.open(file_path, 'w') as f:
         await f.write(json.dumps(data, indent=2, default=str))
 
+# Email sending function
+async def send_email(subject: str, recipient: str, html_content: str) -> bool:
+    """Send email using Gmail SMTP"""
+    if not email_enabled:
+        logging.warning("Email not configured. Message would be: " + html_content)
+        return False
+    
+    try:
+        message = MessageSchema(
+            subject=subject,
+            recipients=[recipient],
+            body=html_content,
+            subtype=MessageType.html
+        )
+        
+        fm = FastMail(conf)
+        await fm.send_message(message)
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send email: {str(e)}")
+        return False
+
+# PDF Resume Generator
+def generate_resume_pdf(resume_data: dict) -> bytes:
+    """Generate ATS-friendly PDF resume"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=24, spaceAfter=30, alignment=TA_CENTER, textColor=colors.black)
+    heading_style = ParagraphStyle('CustomHeading', parent=styles['Heading2'], fontSize=14, spaceAfter=12, textColor=colors.black, fontName='Helvetica-Bold')
+    subheading_style = ParagraphStyle('CustomSubheading', parent=styles['Heading3'], fontSize=12, spaceBefore=6, spaceAfter=6, textColor=colors.black, fontName='Helvetica-Bold')
+    normal_style = ParagraphStyle('CustomNormal', parent=styles['Normal'], fontSize=10, spaceAfter=6, textColor=colors.black)
+    
+    # Build content
+    story = []
+    
+    # Header
+    personal = resume_data.get('personal_info', {})
+    story.append(Paragraph(personal.get('name', 'Sourabh Khairwal'), title_style))
+    
+    contact_info = f"""
+    {personal.get('email', 'sourabhkhairwal@gmail.com')} | {personal.get('phone', '+91 XXXXX XXXXX')} | 
+    {personal.get('location', 'India')} | {personal.get('linkedin', 'linkedin.com/in/sourabhkhairwal')}
+    """
+    story.append(Paragraph(contact_info, normal_style))
+    story.append(Spacer(1, 12))
+    
+    # Professional Summary
+    if personal.get('summary'):
+        story.append(Paragraph("PROFESSIONAL SUMMARY", heading_style))
+        story.append(Paragraph(personal.get('summary'), normal_style))
+        story.append(Spacer(1, 12))
+    
+    # Experience
+    experience = resume_data.get('experience', [])
+    if experience:
+        story.append(Paragraph("PROFESSIONAL EXPERIENCE", heading_style))
+        for exp in experience:
+            story.append(Paragraph(f"<b>{exp.get('title', '')}</b> | {exp.get('company', '')}", subheading_style))
+            story.append(Paragraph(f"{exp.get('duration', '')} | {exp.get('location', '')}", normal_style))
+            
+            if exp.get('responsibilities'):
+                for resp in exp.get('responsibilities', []):
+                    story.append(Paragraph(f"• {resp}", normal_style))
+            story.append(Spacer(1, 8))
+    
+    # Education
+    education = resume_data.get('education', [])
+    if education:
+        story.append(Paragraph("EDUCATION", heading_style))
+        for edu in education:
+            story.append(Paragraph(f"<b>{edu.get('degree', '')}</b>", subheading_style))
+            story.append(Paragraph(f"{edu.get('school', '')} | {edu.get('year', '')}", normal_style))
+            if edu.get('description'):
+                story.append(Paragraph(edu.get('description'), normal_style))
+            story.append(Spacer(1, 8))
+    
+    # Skills
+    skills = resume_data.get('skills', [])
+    if skills:
+        story.append(Paragraph("TECHNICAL SKILLS", heading_style))
+        
+        # Group skills by category
+        skill_categories = {}
+        for skill in skills:
+            category = skill.get('category', 'General')
+            if category not in skill_categories:
+                skill_categories[category] = []
+            skill_categories[category].append(skill.get('name'))
+        
+        for category, skill_list in skill_categories.items():
+            skills_text = f"<b>{category}:</b> " + ", ".join(skill_list)
+            story.append(Paragraph(skills_text, normal_style))
+        story.append(Spacer(1, 12))
+    
+    # Projects
+    projects = resume_data.get('projects', [])
+    if projects:
+        story.append(Paragraph("KEY PROJECTS", heading_style))
+        for proj in projects:
+            story.append(Paragraph(f"<b>{proj.get('title', '')}</b>", subheading_style))
+            story.append(Paragraph(proj.get('description', ''), normal_style))
+            if proj.get('technologies'):
+                tech_text = f"<b>Technologies:</b> {', '.join(proj.get('technologies', []))}"
+                story.append(Paragraph(tech_text, normal_style))
+            story.append(Spacer(1, 8))
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
 # API Routes
 @api_router.get("/")
 async def root():
@@ -112,7 +261,7 @@ async def root():
 
 @api_router.post("/contact")
 async def create_contact_message(contact_data: ContactMessageCreate):
-    """Handle contact form submissions"""
+    """Handle contact form submissions with email notification"""
     try:
         # Create contact message
         contact_message = ContactMessage(**contact_data.dict())
@@ -129,7 +278,43 @@ async def create_contact_message(contact_data: ContactMessageCreate):
         # Also save to MongoDB for backup
         await db.contact_messages.insert_one(contact_message.dict())
         
-        return {"message": "Contact message sent successfully", "id": contact_message.id}
+        # Send email notification
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 10px;">
+                    New Contact Form Submission - Sourabh Portfolio
+                </h2>
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                    <p><strong>Name:</strong> {contact_data.name}</p>
+                    <p><strong>Email:</strong> {contact_data.email}</p>
+                    <p><strong>Message:</strong></p>
+                    <div style="background-color: white; padding: 15px; border-left: 4px solid #2c5aa0; margin-top: 10px;">
+                        {contact_data.message}
+                    </div>
+                </div>
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                <p style="color: #666; font-size: 12px;">
+                    Submitted at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC<br>
+                    Message ID: {contact_message.id}
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        email_sent = await send_email(
+            subject=f"New Contact Form Submission from {contact_data.name}",
+            recipient="sourabhkhairwal@gmail.com",
+            html_content=html_content
+        )
+        
+        return {
+            "message": "Contact message sent successfully", 
+            "id": contact_message.id,
+            "email_sent": email_sent
+        }
     
     except Exception as e:
         logging.error(f"Error creating contact message: {str(e)}")
@@ -149,8 +334,6 @@ async def get_contact_messages():
 async def get_weather():
     """Get weather data (mock implementation)"""
     try:
-        # Mock weather data for now
-        # In production, you would integrate with OpenWeatherMap API
         mock_weather = {
             "location": "New York, NY",
             "temperature": "22°C",
@@ -166,20 +349,11 @@ async def get_weather():
 async def create_project(project_data: ProjectData):
     """Create a new project"""
     try:
-        # Read existing projects
         projects = await read_json_file("projects")
-        
-        # Add new project
         projects.append(project_data.dict())
-        
-        # Save to JSON file
         await write_json_file("projects", projects)
-        
-        # Also save to MongoDB for backup
         await db.projects.insert_one(project_data.dict())
-        
         return {"message": "Project created successfully", "id": project_data.id}
-    
     except Exception as e:
         logging.error(f"Error creating project: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create project")
@@ -198,20 +372,11 @@ async def get_projects():
 async def create_skill(skill_data: SkillData):
     """Create a new skill"""
     try:
-        # Read existing skills
         skills = await read_json_file("skills")
-        
-        # Add new skill
         skills.append(skill_data.dict())
-        
-        # Save to JSON file
         await write_json_file("skills", skills)
-        
-        # Also save to MongoDB for backup
         await db.skills.insert_one(skill_data.dict())
-        
         return {"message": "Skill created successfully", "id": skill_data.id}
-    
     except Exception as e:
         logging.error(f"Error creating skill: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create skill")
@@ -230,20 +395,11 @@ async def get_skills():
 async def create_education(education_data: EducationData):
     """Create a new education or certification entry"""
     try:
-        # Read existing education data
         education = await read_json_file("education")
-        
-        # Add new education entry
         education.append(education_data.dict())
-        
-        # Save to JSON file
         await write_json_file("education", education)
-        
-        # Also save to MongoDB for backup
         await db.education.insert_one(education_data.dict())
-        
         return {"message": "Education entry created successfully", "id": education_data.id}
-    
     except Exception as e:
         logging.error(f"Error creating education entry: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create education entry")
@@ -262,20 +418,11 @@ async def get_education():
 async def create_photography(photography_data: PhotographyData):
     """Create a new photography entry"""
     try:
-        # Read existing photography data
         photography = await read_json_file("photography")
-        
-        # Add new photography entry
         photography.append(photography_data.dict())
-        
-        # Save to JSON file
         await write_json_file("photography", photography)
-        
-        # Also save to MongoDB for backup
         await db.photography.insert_one(photography_data.dict())
-        
         return {"message": "Photography entry created successfully", "id": photography_data.id}
-    
     except Exception as e:
         logging.error(f"Error creating photography entry: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create photography entry")
@@ -290,6 +437,76 @@ async def get_photography():
         logging.error(f"Error retrieving photography data: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve photography data")
 
+@api_router.get("/resume/generate")
+async def generate_resume():
+    """Generate and download PDF resume"""
+    try:
+        # Gather all data for resume
+        skills = await read_json_file("skills")
+        projects = await read_json_file("projects")
+        education = await read_json_file("education")
+        
+        # Sample personal info (you can make this configurable)
+        personal_info = {
+            "name": "Sourabh Khairwal",
+            "email": "sourabhkhairwal@gmail.com",
+            "phone": "+91 XXXXX XXXXX",
+            "location": "India",
+            "linkedin": "linkedin.com/in/sourabhkhairwal",
+            "summary": "Full-Stack Developer & Creative Technologist with expertise in React, Python, and interactive web applications. Passionate about creating digital experiences that combine cutting-edge technology with creative design. Experienced in neural network visualizations, particle systems, and photography portfolio development."
+        }
+        
+        # Sample experience (you can make this configurable)
+        experience = [
+            {
+                "title": "Senior Full-Stack Developer",
+                "company": "Tech Solutions Inc.",
+                "duration": "2022 - Present",
+                "location": "Remote",
+                "responsibilities": [
+                    "Developed interactive portfolio websites with neural network animations and particle systems",
+                    "Built responsive web applications using React, FastAPI, and MongoDB",
+                    "Implemented real-time data visualization and photography gallery systems",
+                    "Integrated email services and PDF generation for client communications"
+                ]
+            },
+            {
+                "title": "Frontend Developer",
+                "company": "Creative Digital Agency",
+                "duration": "2020 - 2022",
+                "location": "India",
+                "responsibilities": [
+                    "Created dynamic user interfaces with advanced CSS animations and JavaScript",
+                    "Developed photography portfolio websites with interactive slideshows",
+                    "Collaborated with design teams to implement pixel-perfect layouts"
+                ]
+            }
+        ]
+        
+        resume_data = {
+            "personal_info": personal_info,
+            "experience": experience,
+            "education": [edu for edu in education if edu.get('type') == 'education'],
+            "skills": skills,
+            "projects": projects[:3]  # Top 3 projects
+        }
+        
+        # Generate PDF
+        pdf_bytes = generate_resume_pdf(resume_data)
+        
+        # Return PDF as response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": "attachment; filename=Sourabh_Khairwal_Resume.pdf"
+            }
+        )
+    
+    except Exception as e:
+        logging.error(f"Error generating resume: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate resume")
+
 @api_router.get("/github/{username}")
 async def get_github_repos(username: str):
     """Get GitHub repositories for a user"""
@@ -298,7 +515,6 @@ async def get_github_repos(username: str):
             response = await client.get(f"https://api.github.com/users/{username}/repos")
             if response.status_code == 200:
                 repos = response.json()
-                # Return simplified repo data
                 return [
                     {
                         "name": repo["name"],
@@ -308,7 +524,7 @@ async def get_github_repos(username: str):
                         "stars": repo["stargazers_count"],
                         "forks": repo["forks_count"]
                     }
-                    for repo in repos[:10]  # Limit to 10 repos
+                    for repo in repos[:10]
                 ]
             else:
                 return []
@@ -320,7 +536,6 @@ async def get_github_repos(username: str):
 async def get_analytics():
     """Get basic analytics data"""
     try:
-        # Read data from JSON files
         contact_messages = await read_json_file("contact_messages")
         projects = await read_json_file("projects")
         photography = await read_json_file("photography")
@@ -365,7 +580,6 @@ async def startup_event():
     """Initialize the application"""
     logger.info("Portfolio API starting up...")
     
-    # Create sample data if files don't exist
     try:
         # Sample skills data
         skills_data = [
@@ -374,7 +588,9 @@ async def startup_event():
             {"id": str(uuid.uuid4()), "name": "React", "level": 92, "category": "Frontend", "icon": "⚛️"},
             {"id": str(uuid.uuid4()), "name": "FastAPI", "level": 88, "category": "Backend", "icon": "🚀"},
             {"id": str(uuid.uuid4()), "name": "MongoDB", "level": 85, "category": "Database", "icon": "🍃"},
-            {"id": str(uuid.uuid4()), "name": "Photography", "level": 88, "category": "Creative", "icon": "📸"}
+            {"id": str(uuid.uuid4()), "name": "Photography", "level": 88, "category": "Creative", "icon": "📸"},
+            {"id": str(uuid.uuid4()), "name": "UI/UX Design", "level": 85, "category": "Design", "icon": "🎨"},
+            {"id": str(uuid.uuid4()), "name": "Node.js", "level": 83, "category": "Backend", "icon": "🟢"}
         ]
         
         # Sample projects data
@@ -384,22 +600,31 @@ async def startup_event():
                 "title": "Neural Network Portfolio",
                 "description": "Interactive portfolio with neural network background animations and particle effects",
                 "technologies": ["React", "Canvas", "Neural Networks", "FastAPI"],
-                "github_url": "https://github.com/johndoe/neural-portfolio",
-                "demo_url": "https://johndoe-portfolio.com",
+                "github_url": "https://github.com/sourabhkhairwal/neural-portfolio",
+                "demo_url": "https://sourabhkhairwal-portfolio.com",
                 "created_at": datetime.utcnow().isoformat()
             },
             {
                 "id": str(uuid.uuid4()),
-                "title": "Photography Gallery",
+                "title": "Photography Gallery System",
                 "description": "Dynamic photography gallery with advanced slideshow and metadata display",
                 "technologies": ["React", "Node.js", "Express", "MongoDB"],
-                "github_url": "https://github.com/johndoe/photo-gallery",
-                "demo_url": "https://gallery.johndoe.com",
+                "github_url": "https://github.com/sourabhkhairwal/photo-gallery",
+                "demo_url": "https://gallery.sourabhkhairwal.com",
+                "created_at": datetime.utcnow().isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Email Integration System",
+                "description": "Professional contact form with Gmail SMTP integration and PDF resume generation",
+                "technologies": ["FastAPI", "Gmail SMTP", "ReportLab", "React"],
+                "github_url": "https://github.com/sourabhkhairwal/email-system",
+                "demo_url": "https://contact.sourabhkhairwal.com",
                 "created_at": datetime.utcnow().isoformat()
             }
         ]
         
-        # Sample education data
+        # Sample education data with certificate links
         education_data = [
             {
                 "id": str(uuid.uuid4()),
@@ -408,7 +633,8 @@ async def startup_event():
                 "year": "2018 - 2022",
                 "description": "Focused on software engineering, algorithms, and web development",
                 "type": "education",
-                "icon": "🎓"
+                "icon": "🎓",
+                "certificate_url": None
             },
             {
                 "id": str(uuid.uuid4()),
@@ -417,7 +643,8 @@ async def startup_event():
                 "year": "2022 - 2024",
                 "description": "Specialized in full-stack development and system architecture",
                 "type": "education",
-                "icon": "📚"
+                "icon": "📚",
+                "certificate_url": None
             },
             {
                 "id": str(uuid.uuid4()),
@@ -426,7 +653,28 @@ async def startup_event():
                 "year": "2023",
                 "description": "Cloud development and deployment certification",
                 "type": "certification",
-                "icon": "☁️"
+                "icon": "☁️",
+                "certificate_url": "https://www.credly.com/badges/aws-certified-developer"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "React Advanced Certification",
+                "school": "Meta",
+                "year": "2023",
+                "description": "Advanced React development and state management",
+                "type": "certification",
+                "icon": "⚛️",
+                "certificate_url": "https://coursera.org/share/react-advanced-certification"
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "degree": "Python Expert Certification",
+                "school": "Python Institute",
+                "year": "2022",
+                "description": "Advanced Python programming and best practices",
+                "type": "certification",
+                "icon": "🐍",
+                "certificate_url": "https://pythoninstitute.org/certification"
             },
             {
                 "id": str(uuid.uuid4()),
@@ -435,7 +683,8 @@ async def startup_event():
                 "year": "2021",
                 "description": "Advanced photography techniques and portfolio development",
                 "type": "certification",
-                "icon": "📸"
+                "icon": "📸",
+                "certificate_url": "https://photography-academy.com/certificates/professional"
             }
         ]
         

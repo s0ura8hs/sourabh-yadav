@@ -249,11 +249,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "JSON-based data storage system"
-    - "Contact form API endpoint"
     - "Contact form integration"
-    - "Weather widget API"
-    - "GitHub integration API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

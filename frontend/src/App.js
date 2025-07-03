@@ -476,17 +476,28 @@ const SkillsSection = () => {
   );
 };
 
-// Education Section with Certificate Links
+// Education Section with Certificate Links - Debug Version
 const EducationSection = () => {
   const [educationData, setEducationData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchEducation = async () => {
       try {
+        console.log('API URL:', API); // Debug log
+        console.log('Full URL:', `${API}/education`); // Debug log
+        
         const response = await axios.get(`${API}/education`);
+        console.log('Response data:', response.data); // Debug log
+        
         setEducationData(response.data);
+        setError(null);
       } catch (error) {
         console.error('Error fetching education data:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -495,6 +506,31 @@ const EducationSection = () => {
 
   const education = educationData.filter(item => item.type === 'education');
   const certificates = educationData.filter(item => item.type === 'certification');
+
+  console.log('Education items:', education); // Debug log
+  console.log('Certificate items:', certificates); // Debug log
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section id="education" className="py-20 px-6 relative">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center text-gray-400">Loading education data...</div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section id="education" className="py-20 px-6 relative">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center text-red-400">Error loading education data: {error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="education" className="py-20 px-6 relative">
@@ -508,23 +544,27 @@ const EducationSection = () => {
           <div>
             <h3 className="text-2xl font-semibold text-gray-200 mb-8 flex items-center">
               <span className="text-3xl mr-3">🎓</span>
-              Education
+              Education ({education.length})
             </h3>
             
             <div className="space-y-6">
-              {education.map((edu) => (
-                <div key={edu.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
-                  <div className="flex items-start">
-                    <span className="text-3xl mr-4">{edu.icon}</span>
-                    <div className="flex-1">
-                      <h4 className="text-xl font-semibold text-gray-200 mb-2">{edu.degree}</h4>
-                      <p className="text-blue-300 font-medium mb-2">{edu.school}</p>
-                      <p className="text-gray-400 text-sm mb-3">{edu.year}</p>
-                      <p className="text-gray-400 text-sm">{edu.description}</p>
+              {education.length > 0 ? (
+                education.map((edu) => (
+                  <div key={edu.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-6 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+                    <div className="flex items-start">
+                      <span className="text-3xl mr-4">{edu.icon}</span>
+                      <div className="flex-1">
+                        <h4 className="text-xl font-semibold text-gray-200 mb-2">{edu.degree}</h4>
+                        <p className="text-blue-300 font-medium mb-2">{edu.school}</p>
+                        <p className="text-gray-400 text-sm mb-3">{edu.year}</p>
+                        <p className="text-gray-400 text-sm">{edu.description}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-gray-400">No education data found</div>
+              )}
             </div>
           </div>
           
@@ -532,35 +572,39 @@ const EducationSection = () => {
           <div>
             <h3 className="text-2xl font-semibold text-gray-200 mb-8 flex items-center">
               <span className="text-3xl mr-3">🏆</span>
-              Certifications
+              Certifications ({certificates.length})
             </h3>
             
             <div className="space-y-4">
-              {certificates.map((cert) => (
-                <div key={cert.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-4 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
-                      <span className="text-2xl mr-4">{cert.icon}</span>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-gray-200">{cert.degree}</h4>
-                        <p className="text-blue-300 text-sm">{cert.school}</p>
+              {certificates.length > 0 ? (
+                certificates.map((cert) => (
+                  <div key={cert.id} className="bg-gradient-to-r from-blue-900/20 to-gray-900/20 rounded-lg p-4 border border-blue-800/30 hover:border-blue-600/50 transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center flex-1">
+                        <span className="text-2xl mr-4">{cert.icon}</span>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-200">{cert.degree}</h4>
+                          <p className="text-blue-300 text-sm">{cert.school}</p>
+                        </div>
+                        <span className="text-gray-400 text-sm mr-4">{cert.year}</span>
                       </div>
-                      <span className="text-gray-400 text-sm mr-4">{cert.year}</span>
+                      
+                      {cert.certificate_url && (
+                        <a 
+                          href={cert.certificate_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full transition-colors duration-300 flex items-center"
+                        >
+                          🔗 View Certificate
+                        </a>
+                      )}
                     </div>
-                    
-                    {cert.certificate_url && (
-                      <a 
-                        href={cert.certificate_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full transition-colors duration-300 flex items-center"
-                      >
-                        🔗 View Certificate
-                      </a>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-gray-400">No certifications found</div>
+              )}
             </div>
           </div>
         </div>
@@ -568,7 +612,6 @@ const EducationSection = () => {
     </section>
   );
 };
-
 // Photography Section
 const PhotographySection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);

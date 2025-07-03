@@ -1,0 +1,43 @@
+[
+  {
+    "id": "56689cf4-a30c-4b7f-884f-4ebe3d128943",
+    "title": "Interactive Portfolio",
+    "description": "A dynamic portfolio website with glittery particle effects",
+    "technologies": [
+      "React",
+      "FastAPI",
+      "MongoDB",
+      "JavaScript"
+    ],
+    "github_url": "https://github.com/johndoe/portfolio",
+    "demo_url": "https://johndoe-portfolio.com",
+    "created_at": "2025-07-03T16:58:03.669381"
+  },
+  {
+    "id": "8ca9dde8-09f7-4e95-a234-0c2ef1d54097",
+    "title": "Weather Dashboard",
+    "description": "Real-time weather monitoring with beautiful visualizations",
+    "technologies": [
+      "Python",
+      "Flask",
+      "Weather API",
+      "Chart.js"
+    ],
+    "github_url": "https://github.com/johndoe/weather-dashboard",
+    "demo_url": "https://weather-dashboard.com",
+    "created_at": "2025-07-03T16:58:03.669396"
+  },
+  {
+    "id": "6c2a7cc7-8515-4478-aa70-6fe0ced8f086",
+    "title": "Test Project",
+    "description": "This is a test project created by the automated test suite.",
+    "technologies": [
+      "Python",
+      "FastAPI",
+      "Testing"
+    ],
+    "github_url": "https://github.com/test/test-project",
+    "demo_url": "https://test-project.example.com",
+    "created_at": "2025-07-03 16:58:14.094417"
+  }
+]

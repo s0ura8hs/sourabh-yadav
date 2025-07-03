@@ -1,0 +1,38 @@
+[
+  {
+    "id": "eeb1f7b5-1e71-414f-ac74-d7ad50e7f04d",
+    "degree": "Bachelor of Science in Computer Science",
+    "school": "Tech University",
+    "year": "2018 - 2022",
+    "description": "Focused on software engineering, algorithms, and web development",
+    "type": "education",
+    "icon": "\ud83c\udf93"
+  },
+  {
+    "id": "74eb5eb0-4b2b-4deb-be4a-d0cb377f5ebe",
+    "degree": "Master of Science in Software Engineering",
+    "school": "Advanced Tech Institute",
+    "year": "2022 - 2024",
+    "description": "Specialized in full-stack development and system architecture",
+    "type": "education",
+    "icon": "\ud83d\udcda"
+  },
+  {
+    "id": "a127ff8e-221f-435a-930b-2ac7cf1fcdb1",
+    "degree": "AWS Certified Developer",
+    "school": "Amazon Web Services",
+    "year": "2023",
+    "description": "Cloud development and deployment certification",
+    "type": "certification",
+    "icon": "\u2601\ufe0f"
+  },
+  {
+    "id": "bda54515-9792-4383-83b5-b24d7c9b3944",
+    "degree": "Professional Photography Certificate",
+    "school": "Photography Academy",
+    "year": "2021",
+    "description": "Advanced photography techniques and portfolio development",
+    "type": "certification",
+    "icon": "\ud83d\udcf8"
+  }
+]

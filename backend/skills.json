@@ -1,0 +1,51 @@
+[
+  {
+    "id": "19ee2ccb-5517-461e-808b-404f93d86d8f",
+    "name": "JavaScript",
+    "level": 95,
+    "category": "Frontend",
+    "icon": "\ud83d\udfe8"
+  },
+  {
+    "id": "297d35d8-a8e3-4225-8be7-2e6eb76f3f68",
+    "name": "Python",
+    "level": 90,
+    "category": "Backend",
+    "icon": "\ud83d\udc0d"
+  },
+  {
+    "id": "bc40d9c7-cdcd-4dd0-88ed-025dd1dc1795",
+    "name": "React",
+    "level": 92,
+    "category": "Frontend",
+    "icon": "\u269b\ufe0f"
+  },
+  {
+    "id": "e7a73760-a4a7-4ede-a017-680cb8f3f2dd",
+    "name": "FastAPI",
+    "level": 88,
+    "category": "Backend",
+    "icon": "\ud83d\ude80"
+  },
+  {
+    "id": "496ca484-edca-4651-812c-8932cba4fcfa",
+    "name": "MongoDB",
+    "level": 85,
+    "category": "Database",
+    "icon": "\ud83c\udf43"
+  },
+  {
+    "id": "7662de9e-baa7-4f1a-b46f-e71cbb66e109",
+    "name": "Docker",
+    "level": 82,
+    "category": "DevOps",
+    "icon": "\ud83d\udc0b"
+  },
+  {
+    "id": "6d30db11-f9b1-4b0a-ae71-b4f419a9f3fc",
+    "name": "Test Skill",
+    "level": 85,
+    "category": "Testing",
+    "icon": "\ud83e\uddea"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "f609ecdb-7f73-4955-90f6-6be815b07e68",
+    "title": "Coastal Majesty",
+    "description": "Dramatic cliff formations meet the endless ocean in this breathtaking coastal landscape. Shot during golden hour to capture the warm light dancing on the rock formations.",
+    "camera": "Canon EOS R5",
+    "settings": "f/11, 1/60s, ISO 100",
+    "location": "Big Sur, California",
+    "image_url": "https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg",
+    "created_at": "2025-07-03T17:11:10.157916"
+  },
+  {
+    "id": "b0b1c4db-d0d2-4096-8c60-375ccbfb41c8",
+    "title": "Mountain Reflection",
+    "description": "Perfect symmetry captured in this serene mountain lake reflection. The stillness of the water creates a mirror-like surface that doubles the beauty of the landscape.",
+    "camera": "Sony A7R IV",
+    "settings": "f/8, 1/125s, ISO 200",
+    "location": "Lake Louise, Canada",
+    "image_url": "https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg",
+    "created_at": "2025-07-03T17:11:10.157923"
+  }
+]

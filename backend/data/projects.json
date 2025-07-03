@@ -26,5 +26,18 @@
     "github_url": "https://github.com/johndoe/weather-dashboard",
     "demo_url": "https://weather-dashboard.com",
     "created_at": "2025-07-03T16:58:03.669396"
+  },
+  {
+    "id": "6c2a7cc7-8515-4478-aa70-6fe0ced8f086",
+    "title": "Test Project",
+    "description": "This is a test project created by the automated test suite.",
+    "technologies": [
+      "Python",
+      "FastAPI",
+      "Testing"
+    ],
+    "github_url": "https://github.com/test/test-project",
+    "demo_url": "https://test-project.example.com",
+    "created_at": "2025-07-03 16:58:14.094417"
   }
 ]

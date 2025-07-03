@@ -40,5 +40,12 @@
     "level": 82,
     "category": "DevOps",
     "icon": "\ud83d\udc0b"
+  },
+  {
+    "id": "6d30db11-f9b1-4b0a-ae71-b4f419a9f3fc",
+    "name": "Test Skill",
+    "level": 85,
+    "category": "Testing",
+    "icon": "\ud83e\uddea"
   }
 ]

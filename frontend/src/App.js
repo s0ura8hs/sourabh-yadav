@@ -633,7 +633,6 @@ const EducationSection = () => {
 // Photography Section
 const PhotographySection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
   
   const photographs = [
     {
@@ -685,16 +684,10 @@ const PhotographySection = () => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % photographs.length);
-    setImageLoaded(false);
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + photographs.length) % photographs.length);
-    setImageLoaded(false);
-  };
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
   };
 
   const currentPhoto = photographs[currentSlide];
@@ -711,18 +704,8 @@ const PhotographySection = () => {
             <img 
               src={currentPhoto.url} 
               alt={currentPhoto.title}
-              className={`max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-500 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              onLoad={handleImageLoad}
+              className="max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-500"
             />
-            
-            {/* Loading placeholder */}
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
-              </div>
-            )}
             
             <button
               onClick={prevSlide}
@@ -775,10 +758,7 @@ const PhotographySection = () => {
             {photographs.map((_, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  setCurrentSlide(index);
-                  setImageLoaded(false);
-                }}
+                onClick={() => setCurrentSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === currentSlide 
                     ? 'bg-blue-500 scale-125' 

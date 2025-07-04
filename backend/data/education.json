@@ -24,6 +24,7 @@
     "year": "2023",
     "description": "Cloud development and deployment certification",
     "type": "certification",
+    "certificate_url": "https://your-certificate-url.com",
     "icon": "\u2601\ufe0f"
   },
   {
@@ -33,6 +34,7 @@
     "year": "2021",
     "description": "Advanced photography techniques and portfolio development",
     "type": "certification",
+    "certificate_url": "https://your-certificate-url.com",
     "icon": "\ud83d\udcf8"
   }
 ]

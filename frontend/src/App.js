@@ -673,7 +673,7 @@ const PhotographySection = () => {
     },
     {
       id: 5,
-      url: "src/images/4.jpg",
+      url: "images/4.jpg",
       title: "Behind the Lens",
       description: "A glimpse into the photographer's world - equipment, planning, and the tools that help capture these moments. This workspace represents the technical side of creative photography.",
       camera: "iPhone 14 Pro",

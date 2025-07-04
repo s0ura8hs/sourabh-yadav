@@ -422,11 +422,15 @@ const AboutSection = () => {
             </div>
           </div>
           
-          <div className="relative">
+         <div className="relative">
             <div className="w-full h-96 bg-gradient-to-br from-blue-900/50 to-gray-900/50 rounded-lg overflow-hidden relative border border-blue-800/30">
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-600/20 to-transparent animate-pulse"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-6xl text-blue-400">👨‍💻</div>
+                <img 
+                  src="/path/to/your/image.jpg" 
+                  alt="Your Name - Developer and Photographer"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
             </div>
           </div>

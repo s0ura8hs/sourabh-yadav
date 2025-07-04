@@ -633,11 +633,12 @@ const EducationSection = () => {
 // Photography Section
 const PhotographySection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   const photographs = [
     {
       id: 1,
-      url: "https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg",
+      url: "frontend/src/images/9.jpg",
       title: "Coastal Majesty",
       description: "Dramatic cliff formations meet the endless ocean in this breathtaking coastal landscape. Shot during golden hour to capture the warm light dancing on the rock formations.",
       camera: "Canon EOS R5",
@@ -646,7 +647,7 @@ const PhotographySection = () => {
     },
     {
       id: 2,
-      url: "https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg",
+      url: "frontend/src/images/6.jpg",
       title: "Mountain Reflection",
       description: "Perfect symmetry captured in this serene mountain lake reflection. The stillness of the water creates a mirror-like surface that doubles the beauty of the landscape.",
       camera: "Sony A7R IV",
@@ -655,7 +656,7 @@ const PhotographySection = () => {
     },
     {
       id: 3,
-      url: "https://images.unsplash.com/photo-1534218238612-bace67b05bf2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBwaG90b2dyYXBoeXxlbnwwfHx8fDE3NTE1NjI0MDN8MA&ixlib=rb-4.1.0&q=85",
+      url: "frontend/src/images/8.jpg",
       title: "Aerial Perspective",
       description: "A winding river cuts through the mountainous landscape, creating natural patterns that can only be fully appreciated from above. This aerial shot showcases the intricate relationship between water and land.",
       camera: "DJI Mavic 3",
@@ -664,7 +665,7 @@ const PhotographySection = () => {
     },
     {
       id: 4,
-      url: "https://images.unsplash.com/photo-1515961896317-adf9e14bdcc0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBwaG90b2dyYXBoeXxlbnwwfHx8fDE3NTE1NjI0MDN8MA&ixlib=rb-4.1.0&q=85",
+      url: "frontend/src/images/7.jpg",
       title: "Alpine Serenity",
       description: "The turquoise waters of this alpine lake create a striking contrast against the snow-capped peaks. The unique color comes from glacial sediment suspended in the water.",
       camera: "Nikon Z9",
@@ -673,7 +674,7 @@ const PhotographySection = () => {
     },
     {
       id: 5,
-      url: "https://images.pexels.com/photos/4549411/pexels-photo-4549411.jpeg",
+      url: "frontend/src/images/3.jpg",
       title: "Behind the Lens",
       description: "A glimpse into the photographer's world - equipment, planning, and the tools that help capture these moments. This workspace represents the technical side of creative photography.",
       camera: "iPhone 14 Pro",
@@ -684,10 +685,16 @@ const PhotographySection = () => {
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % photographs.length);
+    setImageLoaded(false);
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + photographs.length) % photographs.length);
+    setImageLoaded(false);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
   };
 
   const currentPhoto = photographs[currentSlide];
@@ -700,16 +707,26 @@ const PhotographySection = () => {
         </h2>
         
         <div className="relative max-w-4xl mx-auto">
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-900/50 to-gray-900/50 border border-blue-800/30">
+          <div className="relative flex justify-center items-center min-h-[400px] rounded-lg overflow-hidden bg-gradient-to-br from-blue-900/50 to-gray-900/50 border border-blue-800/30">
             <img 
               src={currentPhoto.url} 
               alt={currentPhoto.title}
-              className="w-full h-full object-cover transition-opacity duration-500"
+              className={`max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-500 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              onLoad={handleImageLoad}
             />
+            
+            {/* Loading placeholder */}
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+              </div>
+            )}
             
             <button
               onClick={prevSlide}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 z-10"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -718,7 +735,7 @@ const PhotographySection = () => {
             
             <button
               onClick={nextSlide}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 z-10"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -758,7 +775,10 @@ const PhotographySection = () => {
             {photographs.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentSlide(index)}
+                onClick={() => {
+                  setCurrentSlide(index);
+                  setImageLoaded(false);
+                }}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === currentSlide 
                     ? 'bg-blue-500 scale-125' 
@@ -776,7 +796,6 @@ const PhotographySection = () => {
     </section>
   );
 };
-
 // Projects Section
 const ProjectsSection = () => {
   const projects = [

@@ -637,7 +637,7 @@ const PhotographySection = () => {
   const photographs = [
     {
       id: 1,
-      url: "frontend/src/images/7.jpg",
+      url: "images/7.jpg",
       title: "Coastal Majesty",
       description: "Dramatic cliff formations meet the endless ocean in this breathtaking coastal landscape. Shot during golden hour to capture the warm light dancing on the rock formations.",
       camera: "Canon EOS R5",
@@ -646,7 +646,7 @@ const PhotographySection = () => {
     },
     {
       id: 2,
-      url: "frontend/src/images/8.jpg",
+      url: "images/8.jpg",
       title: "Mountain Reflection",
       description: "Perfect symmetry captured in this serene mountain lake reflection. The stillness of the water creates a mirror-like surface that doubles the beauty of the landscape.",
       camera: "Sony A7R IV",
@@ -655,7 +655,7 @@ const PhotographySection = () => {
     },
     {
       id: 3,
-      url: "frontend/src/images/9.jpg",
+      url: "images/9.jpg",
       title: "Aerial Perspective",
       description: "A winding river cuts through the mountainous landscape, creating natural patterns that can only be fully appreciated from above. This aerial shot showcases the intricate relationship between water and land.",
       camera: "DJI Mavic 3",
@@ -664,7 +664,7 @@ const PhotographySection = () => {
     },
     {
       id: 4,
-      url: "frontend/src/images/3.jpg",
+      url: "images/3.jpg",
       title: "Alpine Serenity",
       description: "The turquoise waters of this alpine lake create a striking contrast against the snow-capped peaks. The unique color comes from glacial sediment suspended in the water.",
       camera: "Nikon Z9",
@@ -673,7 +673,7 @@ const PhotographySection = () => {
     },
     {
       id: 5,
-      url: "frontend/src/images/4.jpg",
+      url: "src/images/4.jpg",
       title: "Behind the Lens",
       description: "A glimpse into the photographer's world - equipment, planning, and the tools that help capture these moments. This workspace represents the technical side of creative photography.",
       camera: "iPhone 14 Pro",

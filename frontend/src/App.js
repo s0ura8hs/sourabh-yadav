@@ -357,10 +357,10 @@ const HeroSection = () => {
       
       <div className="relative z-20 text-center px-6">
         <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-200 via-white to-blue-300 bg-clip-text text-transparent animate-pulse">
-          Sourabh Khairwal
+          Sourabh 
         </h1>
         <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Full-Stack Developer & Creative Technologist
+          Full stack learner
         </p>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
           Crafting digital experiences with interactive effects and cutting-edge technologies
@@ -442,6 +442,10 @@ const SkillsSection = () => {
     { name: 'Frontend Development', level: 95, icon: '🎨' },
     { name: 'Backend Development', level: 90, icon: '⚙️' },
     { name: 'Database Design', level: 85, icon: '💾' },
+    { name: 'API Integration', level: 92, icon: '🔗' },
+    { name: 'Photography', level: 88, icon: '📸' },
+    { name: 'UI/UX Design', level: 85, icon: '✨' },
+   { name: 'Database Design', level: 85, icon: '💾' },
     { name: 'API Integration', level: 92, icon: '🔗' },
     { name: 'Photography', level: 88, icon: '📸' },
     { name: 'UI/UX Design', level: 85, icon: '✨' },
@@ -916,11 +920,11 @@ const ContactSection = () => {
               </div>
               <div className="flex items-center">
                 <span className="text-2xl mr-4">🌐</span>
-                <span className="text-gray-300">github.com/sourabhkhairwal</span>
+                <span className="text-gray-300">github.com/s0ura8hs</span>
               </div>
               <div className="flex items-center">
                 <span className="text-2xl mr-4">💼</span>
-                <span className="text-gray-300">linkedin.com/in/sourabhkhairwal</span>
+                <span className="text-gray-300">linkedin.com/in/sourabh-khairwal</span>
               </div>
             </div>
           </div>

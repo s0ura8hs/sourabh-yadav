@@ -6,7 +6,7 @@
     "camera": "Canon EOS R5",
     "settings": "f/11, 1/60s, ISO 100",
     "location": "Big Sur, California",
-    "image_url": "https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg",
+    "image_url": "frontend/src/images/9.jpg",
     "created_at": "2025-07-03T17:11:10.157916"
   },
   {
@@ -16,7 +16,67 @@
     "camera": "Sony A7R IV",
     "settings": "f/8, 1/125s, ISO 200",
     "location": "Lake Louise, Canada",
-    "image_url": "https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg",
+    "image_url": "frontend/src/images/6.jpg",
     "created_at": "2025-07-03T17:11:10.157923"
+  },
+  {
+    "id": "a8c7d9e1-2f45-4b6c-9d8e-1a2b3c4d5e6f",
+    "title": "Aerial Perspective",
+    "description": "A winding river cuts through the mountainous landscape, creating natural patterns that can only be fully appreciated from above. This aerial shot showcases the intricate relationship between water and land.",
+    "camera": "DJI Mavic 3",
+    "settings": "f/5.6, 1/200s, ISO 100",
+    "location": "Norwegian Fjords",
+    "image_url": "frontend/src/images/8.jpg",
+    "created_at": "2025-07-03T17:11:10.157930"
+  },
+  {
+    "id": "7b6a5c4d-3e2f-4a5b-8c9d-6e7f8a9b0c1d",
+    "title": "Alpine Serenity",
+    "description": "The turquoise waters of this alpine lake create a striking contrast against the snow-capped peaks. The unique color comes from glacial sediment suspended in the water.",
+    "camera": "Nikon Z9",
+    "settings": "f/9, 1/90s, ISO 64",
+    "location": "Swiss Alps",
+    "image_url": "frontend/src/images/7.jpg",
+    "created_at": "2025-07-03T17:11:10.157937"
+  },
+  {
+    "id": "9f8e7d6c-5b4a-4c5d-9e8f-2a3b4c5d6e7f",
+    "title": "Behind the Lens",
+    "description": "A glimpse into the photographer's world - equipment, planning, and the tools that help capture these moments. This workspace represents the technical side of creative photography.",
+    "camera": "iPhone 14 Pro",
+    "settings": "Portrait mode, f/1.8",
+    "location": "Home Studio",
+    "image_url": "https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg",
+    "created_at": "2025-07-03T17:11:10.157944"
+  },
+  {
+    "id": "3c2b1a9e-8d7f-4e5c-7b8a-9d0e1f2a3b4c",
+    "title": "Urban Geometry",
+    "description": "Modern architecture creates fascinating geometric patterns and shadows. This shot explores the interplay between light, shadow, and structural design in contemporary urban environments.",
+    "camera": "Canon EOS R6",
+    "settings": "f/16, 1/250s, ISO 400",
+    "location": "Downtown Seattle",
+    "image_url": "https://images.pexels.com/photos/1022936/pexels-photo-1022936.jpeg",
+    "created_at": "2025-07-03T17:11:10.157951"
+  },
+  {
+    "id": "5d4c3b2a-1e9f-4d5c-8a7b-6c9d0e1f2a3b",
+    "title": "Forest Whispers",
+    "description": "Sunlight filtering through the canopy creates a magical atmosphere in this old-growth forest. The interplay of light and shadow reveals the forest's hidden depths and ancient wisdom.",
+    "camera": "Sony A7III",
+    "settings": "f/4, 1/60s, ISO 800",
+    "location": "Olympic National Park",
+    "image_url": "https://images.pexels.com/photos/1366957/pexels-photo-1366957.jpeg",
+    "created_at": "2025-07-03T17:11:10.157958"
+  },
+  {
+    "id": "8a7b6c5d-4e3f-4a5b-9c8d-7e6f5a4b3c2d",
+    "title": "Desert Minimalism",
+    "description": "The stark beauty of the desert landscape, where simplicity meets grandeur. Sand dunes create flowing lines that shift with the wind, embodying the essence of minimalist natural art.",
+    "camera": "Fujifilm X-T4",
+    "settings": "f/8, 1/200s, ISO 100",
+    "location": "Sahara Desert, Morocco",
+    "image_url": "https://images.pexels.com/photos/1001435/pexels-photo-1001435.jpeg",
+    "created_at": "2025-07-03T17:11:10.157965"
   }
 ]

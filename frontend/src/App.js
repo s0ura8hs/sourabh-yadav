@@ -411,7 +411,7 @@ const AboutSection = () => {
             </p>
             
             <div className="flex flex-wrap gap-3">
-              {['JavaScript', 'React', 'Python', 'FastAPI', 'Photography', 'UI/UX'].map((tech) => (
+              {['JavaScript', 'React', 'C/C++' , 'Java' , 'Python', 'FastAPI', 'Photography', 'UI/UX'].map((tech) => (
                 <span 
                   key={tech}
                   className="px-4 py-2 bg-gradient-to-r from-blue-800 to-blue-700 text-blue-200 rounded-full text-sm font-medium hover:from-blue-700 hover:to-blue-600 transition-all duration-300"
@@ -439,7 +439,7 @@ const AboutSection = () => {
 // Skills Section
 const SkillsSection = () => {
   const skills = [
-    { name: 'Frontend Development', level: 95, icon: '🎨' },
+    { name: 'Frontend Development', level: 95, icon: '♨️' },
     { name: 'Backend Development', level: 90, icon: '⚙️' },
     { name: 'Database Design', level: 85, icon: '💾' },
     { name: 'API Integration', level: 92, icon: '🔗' },
@@ -1008,7 +1008,7 @@ const WeatherWidget = () => {
 
   if (loading) {
     return (
-      <div className="fixed bottom-4 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-gray-300 animate-pulse border border-blue-800/30">
+      <div className="fixed bottom-4 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-white-300 animate-pulse border border-blue-800/30">
         Loading weather...
       </div>
     );
@@ -1017,12 +1017,12 @@ const WeatherWidget = () => {
   if (!weather) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-gray-300 border border-blue-800/30">
+    <div className="fixed bottom-8 right-4 bg-blue-900/50 backdrop-blur-sm rounded-lg p-4 text-white-300 border border-blue-800/30">
       <div className="flex items-center space-x-3">
         <span className="text-2xl">{weather.icon || '🌤️'}</span>
         <div>
           <div className="font-semibold">{weather.location || 'New York'}</div>
-          <div className="text-sm text-gray-400">{weather.temperature || '22°C'}</div>
+          <div className="text-sm text-white-400">{weather.temperature || '22°C'}</div>
         </div>
       </div>
     </div>
